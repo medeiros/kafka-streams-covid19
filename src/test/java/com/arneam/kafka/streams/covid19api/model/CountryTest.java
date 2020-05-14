@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 import java.time.Instant;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 class CountryTest {
@@ -30,6 +31,34 @@ class CountryTest {
     assertThat(country.totalDeaths(), is(equalTo(13240)));
     assertThat(country.newRecovered(), is(equalTo(5827)));
     assertThat(country.totalRecovered(), is(equalTo(78424)));
+    assertThat(country.date(), is(equalTo(Instant.parse("2020-05-14T08:13:33Z"))));
+  }
+
+  @Test
+  void shouldCreateCountryFromJSON() {
+    JSONObject jsonObject = new JSONObject("{\n"
+        + "      \"Country\": \"Bosnia and Herzegovina\",\n"
+        + "      \"CountryCode\": \"BA\",\n"
+        + "      \"Slug\": \"bosnia-and-herzegovina\",\n"
+        + "      \"NewConfirmed\": 23,\n"
+        + "      \"TotalConfirmed\": 2181,\n"
+        + "      \"NewDeaths\": 3,\n"
+        + "      \"TotalDeaths\": 120,\n"
+        + "      \"NewRecovered\": 60,\n"
+        + "      \"TotalRecovered\": 1228,\n"
+        + "      \"Date\": \"2020-05-14T08:13:33Z\"\n"
+        + "    }");
+    Country country = Country.fromJSON(jsonObject);
+    assertThat(country, is(notNullValue()));
+    assertThat(country.country(), is(equalTo("Bosnia and Herzegovina")));
+    assertThat(country.countryCode(), is(equalTo("BA")));
+    assertThat(country.slug(), is(equalTo("bosnia-and-herzegovina")));
+    assertThat(country.newConfirmed(), is(equalTo(23)));
+    assertThat(country.totalConfirmed(), is(equalTo(2181)));
+    assertThat(country.newDeaths(), is(equalTo(3)));
+    assertThat(country.totalDeaths(), is(equalTo(120)));
+    assertThat(country.newRecovered(), is(equalTo(60)));
+    assertThat(country.totalRecovered(), is(equalTo(1228)));
     assertThat(country.date(), is(equalTo(Instant.parse("2020-05-14T08:13:33Z"))));
   }
 
