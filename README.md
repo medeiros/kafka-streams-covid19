@@ -9,6 +9,7 @@ and Twitter Connector Sink (https://github.com/Eneco/kafka-connect-twitter).
 
 # Topology
 
+```
 1. STREAM -> <null, countriesJSONArray>
 2. MAPVALUES -> <null, List<Country>>
 3. MAPVALUES NewConfirmed -> <null, BrazilRankingSummary>
@@ -18,3 +19,4 @@ and Twitter Connector Sink (https://github.com/Eneco/kafka-connect-twitter).
 7. MAPVALUES NewRecovered -> <null, BrazilRankingSummary>
 8. MAPVALUES TotalRecovered -> <null, BrazilRankingSummary>
 9. TO Kafka -> <null, BrazilRankingSummary>
+```
