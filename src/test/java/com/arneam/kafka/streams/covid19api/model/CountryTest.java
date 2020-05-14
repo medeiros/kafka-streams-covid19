@@ -19,8 +19,18 @@ class CountryTest {
         .newRecovered(5827).totalRecovered(78424)
         .date(Instant.parse("2020-05-14T08:13:33Z"))
         .build();
+
     assertThat(country, is(notNullValue()));
     assertThat(country.country(), is(equalTo("Brazil")));
+    assertThat(country.countryCode(), is(equalTo("BR")));
+    assertThat(country.slug(), is(equalTo("brazil")));
+    assertThat(country.newConfirmed(), is(equalTo(11923)));
+    assertThat(country.totalConfirmed(), is(equalTo(190137)));
+    assertThat(country.newDeaths(), is(equalTo(779)));
+    assertThat(country.totalDeaths(), is(equalTo(13240)));
+    assertThat(country.newRecovered(), is(equalTo(5827)));
+    assertThat(country.totalRecovered(), is(equalTo(78424)));
+    assertThat(country.date(), is(equalTo(Instant.parse("2020-05-14T08:13:33Z"))));
   }
 
 }
