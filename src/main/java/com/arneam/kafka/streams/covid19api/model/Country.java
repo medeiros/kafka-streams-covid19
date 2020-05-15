@@ -1,5 +1,6 @@
 package com.arneam.kafka.streams.covid19api.model;
 
+import java.io.Serializable;
 import java.time.Instant;
 import lombok.Builder;
 import lombok.Value;
@@ -9,7 +10,7 @@ import org.json.JSONObject;
 @Builder
 @Accessors(fluent = true)
 @Value
-public class Country {
+public class Country implements Serializable {
 
   String country;
   String countryCode;
