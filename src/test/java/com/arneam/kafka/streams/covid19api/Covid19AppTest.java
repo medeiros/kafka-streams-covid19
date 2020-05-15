@@ -74,7 +74,7 @@ class Covid19AppTest {
         + "      \"TotalDeaths\": 15,\n"
         + "      \"NewRecovered\": 16,\n"
         + "      \"TotalRecovered\": 17,\n"
-        + "      \"Date\": \"2020-05-14T08:13:33Z\"\n"
+        + "      \"Date\": \"" + Instant.now() + "\"\n"
         + "    }";
     String argentinaJson = "{\n"
         + "      \"Country\": \"Argentina\",\n"
@@ -86,7 +86,7 @@ class Covid19AppTest {
         + "      \"TotalDeaths\": 4,\n"
         + "      \"NewRecovered\": 5,\n"
         + "      \"TotalRecovered\": 6,\n"
-        + "      \"Date\": \"2020-05-14T08:13:33Z\"\n"
+        + "      \"Date\": \"" + Instant.now() + "\"\n"
         + "    }";
 
     List<String> countriesJson = new ArrayList<>();

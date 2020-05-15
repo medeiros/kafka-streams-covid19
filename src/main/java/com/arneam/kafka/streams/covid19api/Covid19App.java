@@ -39,12 +39,12 @@ public class Covid19App {
         .mapValues(s -> Country.fromJSON(new JSONObject(s)));
     mapJSONToCountry.print(Printed.toSysOut());
 
-//    KStream<String, Country> filterTodayData = mapJSONToCountry
-//        .filter((s, country) -> country.date().truncatedTo(ChronoUnit.DAYS)
-//            .equals(instant.truncatedTo(ChronoUnit.DAYS)));
-//    filterTodayData.print(Printed.toSysOut());
+    KStream<String, Country> filterTodayData = mapJSONToCountry
+        .filter((s, country) -> country.date().truncatedTo(ChronoUnit.DAYS)
+            .equals(instant.truncatedTo(ChronoUnit.DAYS)));
+    filterTodayData.print(Printed.toSysOut());
 
-    mapJSONToCountry.to("covid-output", Produced.with(new Serdes.StringSerde(), new CountrySerde()));
+    filterTodayData.to("covid-output", Produced.with(new Serdes.StringSerde(), new CountrySerde()));
 
     return builder.build();
   }
