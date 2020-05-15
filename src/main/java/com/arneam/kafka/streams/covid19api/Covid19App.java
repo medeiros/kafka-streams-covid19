@@ -19,8 +19,11 @@ import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
+import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Printed;
+import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.processor.internals.ProcessorTopology;
 import org.json.JSONObject;
 
@@ -29,16 +32,19 @@ public class Covid19App {
   public Topology topology(Instant instant) {
     StreamsBuilder builder = new StreamsBuilder();
 
-    KStream<String, String> stream = builder.stream("covid-input");
+    KStream<String, String> stream = builder.stream("covid-input", Consumed.with(new Serdes.StringSerde(), new Serdes.StringSerde()));
+    stream.print(Printed.toSysOut());
 
     KStream<String, Country> mapJSONToCountry = stream
         .mapValues(s -> Country.fromJSON(new JSONObject(s)));
+    mapJSONToCountry.print(Printed.toSysOut());
 
-    KStream<String, Country> filterTodayData = mapJSONToCountry
-        .filter((s, country) -> country.date().truncatedTo(ChronoUnit.DAYS)
-            .equals(instant.truncatedTo(ChronoUnit.DAYS)));
+//    KStream<String, Country> filterTodayData = mapJSONToCountry
+//        .filter((s, country) -> country.date().truncatedTo(ChronoUnit.DAYS)
+//            .equals(instant.truncatedTo(ChronoUnit.DAYS)));
+//    filterTodayData.print(Printed.toSysOut());
 
-    filterTodayData.to("covid-output");
+    mapJSONToCountry.to("covid-output", Produced.with(new Serdes.StringSerde(), new CountrySerde()));
 
     return builder.build();
   }
