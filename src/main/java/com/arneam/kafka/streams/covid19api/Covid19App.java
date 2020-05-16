@@ -1,30 +1,23 @@
 package com.arneam.kafka.streams.covid19api;
 
-import com.arneam.kafka.streams.covid19api.model.BrazilRanking;
 import com.arneam.kafka.streams.covid19api.model.BrazilRankingSummary;
 import com.arneam.kafka.streams.covid19api.model.Country;
+import com.arneam.kafka.streams.covid19api.model.CountryRanking;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.Properties;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serdes;
-import org.apache.kafka.common.serialization.Serializer;
+import org.apache.kafka.common.serialization.Serdes.StringSerde;
+import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
-import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.Topology;
-import org.apache.kafka.streams.TopologyTestDriver;
 import org.apache.kafka.streams.kstream.Consumed;
+import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.processor.internals.ProcessorTopology;
+import org.apache.kafka.streams.state.KeyValueStore;
 import org.json.JSONObject;
 
 public class Covid19App {
@@ -32,7 +25,8 @@ public class Covid19App {
   public Topology topology(Instant instant) {
     StreamsBuilder builder = new StreamsBuilder();
 
-    KStream<String, String> stream = builder.stream("covid-input", Consumed.with(new Serdes.StringSerde(), new Serdes.StringSerde()));
+    KStream<String, String> stream = builder
+        .stream("covid-input", Consumed.with(new Serdes.StringSerde(), new Serdes.StringSerde()));
     stream.print(Printed.toSysOut());
 
     KStream<String, Country> mapJSONToCountry = stream
@@ -44,10 +38,27 @@ public class Covid19App {
             .equals(instant.truncatedTo(ChronoUnit.DAYS)));
     filterTodayData.print(Printed.toSysOut());
 
-    filterTodayData.to("covid-output", Produced.with(new Serdes.StringSerde(), new CountrySerde()));
+    KTable<String, CountryRanking> aggregate = filterTodayData
+        .selectKey((s, country) -> country.countryCode())
+        .groupByKey(Grouped.with(Serdes.String(), new CountrySerde()))
+        .aggregate(CountryRanking::new, (s, country, countryRanking) -> {
+          countryRanking.countries.add(country);
+          return countryRanking;
+        }, Materialized.<String, CountryRanking, KeyValueStore<Bytes, byte[]>>as(
+            "aggregated-table-store").withKeySerde(Serdes.String()).withValueSerde(new CountryRankingSerde()));
+
+    KStream<String, BrazilRankingSummary> finalStream = aggregate
+        .mapValues((s, countryRanking) -> countryRanking.createSummary()).toStream();
+    finalStream.print(Printed.toSysOut());
+
+    finalStream.to("covid-output",
+        Produced.with(new Serdes.StringSerde(), new BrazilRankingSummarySerde()));
+
+//    filterTodayData.to("covid-output", Produced.with(new Serdes.StringSerde(), new CountrySerde()));
 
     return builder.build();
   }
+
 
   public static void main(String[] args) {
 

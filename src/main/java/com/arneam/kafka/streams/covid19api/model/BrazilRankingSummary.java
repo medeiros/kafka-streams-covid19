@@ -1,5 +1,6 @@
 package com.arneam.kafka.streams.covid19api.model;
 
+import java.io.Serializable;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -7,7 +8,7 @@ import lombok.experimental.Accessors;
 @Builder
 @Accessors(fluent = true)
 @Getter
-public class BrazilRankingSummary {
+public class BrazilRankingSummary implements Serializable {
 
   private static final String MESSAGE_FORMAT =
       "Ranking Covid19 do Brasil no mundo: %so. em novos casos confirmados; %so. em "

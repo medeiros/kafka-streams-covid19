@@ -1,9 +1,11 @@
 package com.arneam.kafka.streams.covid19api;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItems;
 
+import com.arneam.kafka.streams.covid19api.model.BrazilRankingSummary;
 import com.arneam.kafka.streams.covid19api.model.Country;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -26,9 +28,9 @@ class Covid19AppTest {
 
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, String> inputTopic;
-  private TestOutputTopic<String, Country> outputTopic;
+  private TestOutputTopic<String, BrazilRankingSummary> outputTopic;
   private StringSerde stringSerde = new Serdes.StringSerde();
-  private CountrySerde countrySerde = new CountrySerde();
+  private BrazilRankingSummarySerde brazilRankingSummarySerde = new BrazilRankingSummarySerde();
 
   @BeforeEach
   void init() {
@@ -42,7 +44,7 @@ class Covid19AppTest {
     this.inputTopic = this.testDriver
         .createInputTopic("covid-input", stringSerde.serializer(), stringSerde.serializer());
     this.outputTopic = this.testDriver
-        .createOutputTopic("covid-output", stringSerde.deserializer(), countrySerde.deserializer());
+        .createOutputTopic("covid-output", stringSerde.deserializer(), brazilRankingSummarySerde.deserializer());
   }
 
   @AfterEach
@@ -68,7 +70,7 @@ class Covid19AppTest {
         + "      \"Country\": \"Brazil\",\n"
         + "      \"CountryCode\": \"BR\",\n"
         + "      \"Slug\": \"brazil\",\n"
-        + "      \"NewConfirmed\": 12,\n"
+        + "      \"NewConfirmed\": 12000,\n"
         + "      \"TotalConfirmed\": 13,\n"
         + "      \"NewDeaths\": 14,\n"
         + "      \"TotalDeaths\": 15,\n"
@@ -82,27 +84,29 @@ class Covid19AppTest {
         + "      \"Slug\": \"argentina\",\n"
         + "      \"NewConfirmed\": 1,\n"
         + "      \"TotalConfirmed\": 2,\n"
-        + "      \"NewDeaths\": 3,\n"
-        + "      \"TotalDeaths\": 4,\n"
+        + "      \"NewDeaths\": 4,\n"
+        + "      \"TotalDeaths\": 20,\n"
         + "      \"NewRecovered\": 5,\n"
-        + "      \"TotalRecovered\": 6,\n"
+        + "      \"TotalRecovered\": 27,\n"
         + "      \"Date\": \"" + Instant.now() + "\"\n"
         + "    }";
 
     List<String> countriesJson = new ArrayList<>();
-    countriesJson.add(bosniaJson);
     countriesJson.add(brazilJson);
+    countriesJson.add(bosniaJson);
     countriesJson.add(argentinaJson);
     this.inputTopic.pipeValueList(countriesJson);
 
-    List<KeyValue<String, Country>> countries = new ArrayList<>();
-    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(bosniaJson))));
-    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(argentinaJson))));
-    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(brazilJson))));
+//    List<KeyValue<String, Country>> countries = new ArrayList<>();
+//    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(bosniaJson))));
+//    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(argentinaJson))));
+//    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(brazilJson))));
+
+    BrazilRankingSummary brazilRankingSummary = BrazilRankingSummary.builder().newConfirmed(1)
+        .totalConfirmed(2).newDeaths(1).totalDeaths(3).newRecovered(2).totalRecovered(3).build();
 
     assertThat(outputTopic.isEmpty(), is(false));
-    assertThat(outputTopic.readKeyValuesToList(),
-        hasItems(countries.get(0), countries.get(1), countries.get(2)));
+    assertThat(outputTopic.readKeyValue().value, is(equalTo(brazilRankingSummary)));
     assertThat(outputTopic.isEmpty(), is(true));
   }
 
