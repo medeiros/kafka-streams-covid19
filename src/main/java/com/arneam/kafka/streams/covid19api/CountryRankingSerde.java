@@ -1,6 +1,5 @@
 package com.arneam.kafka.streams.covid19api;
 
-import com.arneam.kafka.streams.covid19api.model.Country;
 import com.arneam.kafka.streams.covid19api.model.CountryRanking;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,7 +11,8 @@ import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serializer;
 
-public class CountryRankingSerde implements Serializer<CountryRanking>, Deserializer<CountryRanking>, Serde<CountryRanking> {
+public class CountryRankingSerde implements Serializer<CountryRanking>,
+    Deserializer<CountryRanking>, Serde<CountryRanking> {
 
   @Override
   public void configure(Map<String, ?> configs, boolean isKey) {
