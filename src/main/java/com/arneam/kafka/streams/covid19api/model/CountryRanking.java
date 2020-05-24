@@ -6,70 +6,43 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.ToIntFunction;
 
 public class CountryRanking implements Serializable {
 
-  public List<Country> countries = new ArrayList<>();
+  public static final String BRAZIL_COUNTRY_NAME = "Brazil";
+
+  private List<Country> countries = new ArrayList<>();
+
+  public void addCountry(Country country) {
+    this.countries.add(country);
+  }
 
   public BrazilRankingSummary createSummary() {
-    BrazilRankingSummary brazilRankingSummary = BrazilRankingSummary.builder()
-        .newConfirmed(brazilRankindNewConfirmed((countries)))
-        .totalConfirmed(brazilRankindTotalConfirmed(countries))
-        .newDeaths(brazilRankindNewDeaths(countries))
-        .totalDeaths(brazilRankindTotalDeaths(countries))
-        .newRecovered(brazilRankindNewRecovered(countries))
-        .totalRecovered(brazilRankindTotalRecovered(countries))
+    return BrazilRankingSummary.builder()
+        .newConfirmed(brazilRanking(Country::newConfirmed))
+        .totalConfirmed(brazilRanking(Country::totalConfirmed))
+        .newDeaths(brazilRanking(Country::newDeaths))
+        .totalDeaths(brazilRanking(Country::totalDeaths))
+        .newRecovered(brazilRanking(Country::newRecovered))
+        .totalRecovered(brazilRanking(Country::totalRecovered))
         .build();
-    return brazilRankingSummary;
   }
 
-  int brazilRankindNewConfirmed(List<Country> countries) {
-    Collections.sort(countries,
-        Collections.reverseOrder(Comparator.comparingInt(Country::newConfirmed)));
+  int brazilRanking(ToIntFunction<Country> function) {
+    countries.sort(Collections.reverseOrder(Comparator.comparingInt(function)));
     Optional<Country> brazil = countries.stream()
-        .filter(country -> country.country().equals("Brazil")).findFirst();
+        .filter(country -> country.country().equals(BRAZIL_COUNTRY_NAME)).findFirst();
     return countries.indexOf(brazil.get()) + 1;
   }
 
-  int brazilRankindTotalConfirmed(List<Country> countries) {
-    Collections.sort(countries,
-        Collections.reverseOrder(Comparator.comparingInt(Country::totalConfirmed)));
-    Optional<Country> brazil = countries.stream()
-        .filter(country -> country.country().equals("Brazil")).findFirst();
-    return countries.indexOf(brazil.get()) + 1;
+  @Override
+  public String toString() {
+    StringBuilder allValues = new StringBuilder("CountryRanking{countries=");
+    for (Country country : countries) {
+      allValues.append(country.toString()).append("; ");
+    }
+    allValues.append("}");
+    return allValues.toString();
   }
-
-  int brazilRankindNewDeaths(List<Country> countries) {
-    Collections
-        .sort(countries, Collections.reverseOrder(Comparator.comparingInt(Country::newDeaths)));
-    Optional<Country> brazil = countries.stream()
-        .filter(country -> country.country().equals("Brazil")).findFirst();
-    return countries.indexOf(brazil.get()) + 1;
-  }
-
-  int brazilRankindTotalDeaths(List<Country> countries) {
-    Collections.sort(countries,
-        Collections.reverseOrder(Comparator.comparingInt(Country::totalDeaths)));
-    Optional<Country> brazil = countries.stream()
-        .filter(country -> country.country().equals("Brazil")).findFirst();
-    return countries.indexOf(brazil.get()) + 1;
-  }
-
-  int brazilRankindNewRecovered(List<Country> countries) {
-    Collections.sort(countries,
-        Collections.reverseOrder(Comparator.comparingInt(Country::newRecovered)));
-    Optional<Country> brazil = countries.stream()
-        .filter(country -> country.country().equals("Brazil")).findFirst();
-    return countries.indexOf(brazil.get()) + 1;
-  }
-
-  int brazilRankindTotalRecovered(List<Country> countries) {
-    Collections.sort(countries,
-        Collections.reverseOrder(Comparator.comparingInt(Country::totalRecovered)));
-    Optional<Country> brazil = countries.stream()
-        .filter(country -> country.country().equals("Brazil")).findFirst();
-    return countries.indexOf(brazil.get()) + 1;
-  }
-
-
 }

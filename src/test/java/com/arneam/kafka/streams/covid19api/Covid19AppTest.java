@@ -3,48 +3,69 @@ package com.arneam.kafka.streams.covid19api;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.core.IsCollectionContaining.hasItems;
 
 import com.arneam.kafka.streams.covid19api.model.BrazilRankingSummary;
-import com.arneam.kafka.streams.covid19api.model.Country;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.serialization.Serdes.StringSerde;
-import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
-import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class Covid19AppTest {
 
+  public static final String INPUT_TOPIC = "covid-input";
+  public static final String OUTPUT_TOPIC = "covid-output";
+  public static final String APPLICATION_ID = "covid19-application";
+  public static final String BOOTSTRAP_SERVERS = "dummy:1234";
+
+  private static Instant today;
+
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, String> inputTopic;
-  private TestOutputTopic<String, BrazilRankingSummary> outputTopic;
+  private TestOutputTopic<String, String> outputTopic;
   private StringSerde stringSerde = new Serdes.StringSerde();
-  private BrazilRankingSummarySerde brazilRankingSummarySerde = new BrazilRankingSummarySerde();
+
+  @BeforeAll
+  static void startAll() {
+    today = Instant.now();
+  }
 
   @BeforeEach
   void init() {
-    final Topology topology = new Covid19App().topology(Instant.now());
+    final Topology topology = new Covid19App()
+        .topology(Instant.now(), INPUT_TOPIC, OUTPUT_TOPIC);
 
     Properties config = new Properties();
-    config.put(StreamsConfig.APPLICATION_ID_CONFIG, "covid19-application");
-    config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "dummy:1234");
+    config.put(StreamsConfig.APPLICATION_ID_CONFIG, APPLICATION_ID);
+    config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
+    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+    config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
+    config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE);
+    config.put(ProducerConfig.ACKS_CONFIG, "all");
+    config.put(ProducerConfig.RETRIES_CONFIG, 3);
+    config.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+    config.put(StreamsConfig.POLL_MS_CONFIG, 1000);
+    config.put(StreamsConfig.RETRY_BACKOFF_MS_CONFIG, 2000);
+
 
     this.testDriver = new TopologyTestDriver(topology, config);
     this.inputTopic = this.testDriver
-        .createInputTopic("covid-input", stringSerde.serializer(), stringSerde.serializer());
+        .createInputTopic(INPUT_TOPIC, stringSerde.serializer(), stringSerde.serializer());
     this.outputTopic = this.testDriver
-        .createOutputTopic("covid-output", stringSerde.deserializer(), brazilRankingSummarySerde.deserializer());
+        .createOutputTopic(OUTPUT_TOPIC, stringSerde.deserializer(), stringSerde.deserializer());
   }
 
   @AfterEach
@@ -54,6 +75,28 @@ class Covid19AppTest {
 
   @Test
   void shouldGenerateDataTable() {
+    List<String> data = dataFromToday();
+    data.addAll(dataFromYesterday());
+    this.inputTopic.pipeValueList(data);
+
+    assertThat(outputTopic.isEmpty(), is(false));
+
+    BrazilRankingSummary expectedRanking = BrazilRankingSummary.builder().newConfirmed(1)
+        .totalConfirmed(2).newDeaths(1).totalDeaths(3).newRecovered(2).totalRecovered(3).build();
+    assertThat(outputTopic.readKeyValue().value, is(equalTo(expectedRanking)));
+
+    assertThat(outputTopic.isEmpty(), is(true));
+  }
+
+  private List<String> dataFromToday() {
+    return dataFrom(today, 17);
+  }
+
+  private List<String> dataFromYesterday() {
+    return dataFrom(today.minus(1, ChronoUnit.DAYS), 1000000);
+  }
+
+  private List<String> dataFrom(Instant date, int totalRecoveredValueToChangeOrder) {
     String bosniaJson = "{\n"
         + "      \"Country\": \"Bosnia and Herzegovina\",\n"
         + "      \"CountryCode\": \"BA\",\n"
@@ -64,7 +107,7 @@ class Covid19AppTest {
         + "      \"TotalDeaths\": 120,\n"
         + "      \"NewRecovered\": 60,\n"
         + "      \"TotalRecovered\": 1228,\n"
-        + "      \"Date\": \"" + Instant.now() + "\"\n"
+        + "      \"Date\": \"" + date + "\"\n"
         + "    }";
     String brazilJson = "{\n"
         + "      \"Country\": \"Brazil\",\n"
@@ -75,8 +118,8 @@ class Covid19AppTest {
         + "      \"NewDeaths\": 14,\n"
         + "      \"TotalDeaths\": 15,\n"
         + "      \"NewRecovered\": 16,\n"
-        + "      \"TotalRecovered\": 17,\n"
-        + "      \"Date\": \"" + Instant.now() + "\"\n"
+        + "      \"TotalRecovered\": " + totalRecoveredValueToChangeOrder + ",\n"
+        + "      \"Date\": \"" + date + "\"\n"
         + "    }";
     String argentinaJson = "{\n"
         + "      \"Country\": \"Argentina\",\n"
@@ -88,26 +131,13 @@ class Covid19AppTest {
         + "      \"TotalDeaths\": 20,\n"
         + "      \"NewRecovered\": 5,\n"
         + "      \"TotalRecovered\": 27,\n"
-        + "      \"Date\": \"" + Instant.now() + "\"\n"
+        + "      \"Date\": \"" + date + "\"\n"
         + "    }";
-
     List<String> countriesJson = new ArrayList<>();
     countriesJson.add(brazilJson);
     countriesJson.add(bosniaJson);
     countriesJson.add(argentinaJson);
-    this.inputTopic.pipeValueList(countriesJson);
-
-//    List<KeyValue<String, Country>> countries = new ArrayList<>();
-//    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(bosniaJson))));
-//    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(argentinaJson))));
-//    countries.add(new KeyValue<>(null, Country.fromJSON(new JSONObject(brazilJson))));
-
-    BrazilRankingSummary brazilRankingSummary = BrazilRankingSummary.builder().newConfirmed(1)
-        .totalConfirmed(2).newDeaths(1).totalDeaths(3).newRecovered(2).totalRecovered(3).build();
-
-    assertThat(outputTopic.isEmpty(), is(false));
-    assertThat(outputTopic.readKeyValue().value, is(equalTo(brazilRankingSummary)));
-    assertThat(outputTopic.isEmpty(), is(true));
+    return countriesJson;
   }
 
 }

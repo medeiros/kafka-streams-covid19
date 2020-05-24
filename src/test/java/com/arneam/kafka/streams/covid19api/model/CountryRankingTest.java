@@ -43,7 +43,9 @@ class CountryRankingTest {
   @Test
   void shouldCalculateBrazilRanking() {
     CountryRanking countryRanking = new CountryRanking();
-    countryRanking.countries = countries;
+    countryRanking.addCountry( countries.get(0));
+    countryRanking.addCountry( countries.get(1));
+    countryRanking.addCountry( countries.get(2));
     BrazilRankingSummary brazilRanking = countryRanking.createSummary();
     assertThat(brazilRanking.newConfirmed(), is(equalTo(1)));
     assertThat(brazilRanking.totalConfirmed(), is(equalTo(1)));
