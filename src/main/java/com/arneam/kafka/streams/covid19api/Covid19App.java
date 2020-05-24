@@ -49,9 +49,13 @@ public class Covid19App {
     final Properties config = new Properties();
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, APPLICATION_ID);
     config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
-    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-    config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
+    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
     config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE);
+
+    // to make sure that only one agregate message will come out
+    // https://docs.confluent.io/current/streams/developer-guide/memory-mgmt.html
+    config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 5 * 1024 * 1024);
+    config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 30000);
 
     KafkaStreams streams = new KafkaStreams(topology, config);
     streams.cleanUp();
