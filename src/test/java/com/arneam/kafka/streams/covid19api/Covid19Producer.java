@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 public class Covid19Producer {
 
   private static Logger log = LoggerFactory.getLogger(Covid19Producer.class);
+  private static Instant today = Instant.now();
 
   public static void main(String[] args) throws InterruptedException, ExecutionException {
     String bootStrapServer = "localhost:9092";
@@ -50,16 +51,18 @@ public class Covid19Producer {
           log.error("Error: ", e);
         }
       }).get();
-      Thread.sleep(1000);
     }
+
+    Thread.sleep(20000);
+    producer.send(new ProducerRecord<>(topic, dummyRecord(today)));
   }
 
   private List<String> dataFromToday() {
-    return dataFrom(Instant.now(), 17);
+    return dataFrom(today, 17);
   }
 
   private List<String> dataFromYesterday() {
-    return dataFrom(Instant.now().minus(1, ChronoUnit.DAYS), 1000000);
+    return dataFrom(today.minus(1, ChronoUnit.DAYS), 1000000);
   }
 
   private List<String> dataFrom(Instant date, int totalRecoveredValueToChangeOrder) {
@@ -106,4 +109,18 @@ public class Covid19Producer {
     return countriesJson;
   }
 
+  private String dummyRecord(Instant date) {
+    return "{\n"
+        + "      \"Country\": \"\",\n"
+        + "      \"CountryCode\": \"\",\n"
+        + "      \"Slug\": \"\",\n"
+        + "      \"NewConfirmed\": 0,\n"
+        + "      \"TotalConfirmed\": 0,\n"
+        + "      \"NewDeaths\": 0,\n"
+        + "      \"TotalDeaths\": 0,\n"
+        + "      \"NewRecovered\": 0,\n"
+        + "      \"TotalRecovered\": 0,\n"
+        + "      \"Date\": \"" + date + "\"\n"
+        + "    }";
+  }
 }

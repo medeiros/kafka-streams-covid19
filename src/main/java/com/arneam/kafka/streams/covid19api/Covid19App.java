@@ -2,6 +2,7 @@ package com.arneam.kafka.streams.covid19api;
 
 import com.arneam.kafka.streams.covid19api.model.Country;
 import com.arneam.kafka.streams.covid19api.model.CountryRanking;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Properties;
@@ -19,10 +20,18 @@ import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Printed;
 import org.apache.kafka.streams.kstream.Produced;
-import org.apache.kafka.streams.state.KeyValueStore;
+import org.apache.kafka.streams.kstream.Suppressed;
+import org.apache.kafka.streams.kstream.Suppressed.BufferConfig;
+import org.apache.kafka.streams.kstream.TimeWindowedKStream;
+import org.apache.kafka.streams.kstream.TimeWindows;
+import org.apache.kafka.streams.kstream.Windowed;
+import org.apache.kafka.streams.kstream.WindowedSerdes;
+import org.apache.kafka.streams.state.WindowStore;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-/**
+/*
  * Covid19App
  *
 $ kafka-topics.sh --zookeeper localhost:2181 --delete --topic covid-input
@@ -41,8 +50,10 @@ public class Covid19App {
 
   public static final String INPUT_TOPIC = "covid-input";
   public static final String OUTPUT_TOPIC = "covid-output";
-  public static final String APPLICATION_ID = "covid19-application-019";
+  public static final String APPLICATION_ID = "covid19-application-33";
   public static final String BOOTSTRAP_SERVERS = "localhost:9092";
+
+  public Logger log = LoggerFactory.getLogger(Covid19App.class);
 
   public static void main(String[] args) {
     final Topology topology = new Covid19App().topology(Instant.now(), INPUT_TOPIC, OUTPUT_TOPIC);
@@ -54,8 +65,8 @@ public class Covid19App {
 
     // to make sure that only one agregate message will come out
     // https://docs.confluent.io/current/streams/developer-guide/memory-mgmt.html
-    config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 5 * 1024 * 1024);
-    config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 30000);
+    //config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 5 * 1024 * 1024);
+    //config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 30000);
 
     KafkaStreams streams = new KafkaStreams(topology, config);
     streams.cleanUp();
@@ -80,24 +91,34 @@ public class Covid19App {
     filterTodayData.print(Printed.toSysOut());
 
     final CountryRanking ranking = new CountryRanking();
-    KTable<String, CountryRanking> aggregate = filterTodayData
+    TimeWindowedKStream<String, Country> window = filterTodayData
         .selectKey((s, country) -> country.date().toString())
         .groupByKey(Grouped.with(Serdes.String(), new CountrySerde()))
+        .windowedBy(TimeWindows.of(Duration.ofSeconds(5)).grace(Duration.ofSeconds(5)));
+
+    // entender porque registro de execucao anterior entra no window, mesmo tendo outra key (data)
+    // usar through, peek, foreach ou algo para limpar o objeto ranking (mudar estado)?
+    // tentar limpar o ranking para proximas execucoes! -- chamar clearCountries
+    KTable<Windowed<String>, CountryRanking> aggregate = window
         .aggregate(() -> ranking, (s, country, countryRanking) -> {
           countryRanking.addCountry(country);
+          log.info("----> country added: {}", country.toString());
           return countryRanking;
-        }, Materialized.<String, CountryRanking, KeyValueStore<Bytes, byte[]>>as(
-            "aggregated-table-store")
-            .withKeySerde(Serdes.String()).withValueSerde(new CountryRankingSerde()));
-    aggregate.toStream().print(Printed.toSysOut());
+        }, Materialized.<String, CountryRanking, WindowStore<Bytes, byte[]>>as(
+            "aggregated-table-store").withCachingDisabled()
+            .withKeySerde(Serdes.String()).withValueSerde(new CountryRankingSerde()))
+        .suppress(Suppressed.untilWindowCloses(BufferConfig.unbounded()));
+    aggregate.toStream()
+        .print(Printed.<Windowed<String>, CountryRanking>toSysOut().withLabel("TimeWindow"));
 
-    KStream<String, String> finalStream = aggregate
-        .mapValues((s, countryRanking) -> countryRanking.createSummary().toString()).toStream();
+    KStream<Windowed<String>, String> finalStream = aggregate
+        .mapValues((s, countryRanking) -> countryRanking.createSummary().toString()).toStream()
+        .peek((stringWindowed, s) -> ranking.clearCountries());
     finalStream.print(Printed.toSysOut());
-    finalStream.to(outputTopic, Produced.with(Serdes.String(), Serdes.String()));
+    finalStream.to(outputTopic,
+        Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), Serdes.String()));
 
     return builder.build();
   }
-
 
 }

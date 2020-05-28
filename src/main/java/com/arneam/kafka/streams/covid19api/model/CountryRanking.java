@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
+import sun.java2d.SurfaceDataProxy.CountdownTracker;
 
 public class CountryRanking implements Serializable {
 
@@ -16,6 +17,14 @@ public class CountryRanking implements Serializable {
 
   public void addCountry(Country country) {
     this.countries.add(country);
+  }
+
+  public List<Country> getCountries() {
+    return Collections.unmodifiableList(countries);
+  }
+
+  public void clearCountries() {
+    countries.clear();
   }
 
   public BrazilRankingSummary createSummary() {

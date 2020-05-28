@@ -19,8 +19,9 @@ import org.apache.kafka.streams.TestInputTopic;
 import org.apache.kafka.streams.TestOutputTopic;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.TopologyTestDriver;
+import org.apache.kafka.streams.kstream.Windowed;
+import org.apache.kafka.streams.kstream.WindowedSerdes;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,41 +32,34 @@ class Covid19AppTest {
   public static final String APPLICATION_ID = "covid19-application";
   public static final String BOOTSTRAP_SERVERS = "dummy:1234";
 
-  private static Instant today;
+  private static final Instant today = Instant.now();
 
   private TopologyTestDriver testDriver;
   private TestInputTopic<String, String> inputTopic;
-  private TestOutputTopic<String, String> outputTopic;
+  private TestOutputTopic<Windowed<String>, String> outputTopic;
   private StringSerde stringSerde = new Serdes.StringSerde();
-
-  @BeforeAll
-  static void startAll() {
-    today = Instant.now();
-  }
 
   @BeforeEach
   void init() {
-    final Topology topology = new Covid19App()
-        .topology(Instant.now(), INPUT_TOPIC, OUTPUT_TOPIC);
+    final Topology topology = new Covid19App().topology(today, INPUT_TOPIC, OUTPUT_TOPIC);
+    this.testDriver = new TopologyTestDriver(topology, config());
+    this.inputTopic = this.testDriver
+        .createInputTopic(INPUT_TOPIC, stringSerde.serializer(), stringSerde.serializer());
+    this.outputTopic = this.testDriver.createOutputTopic(OUTPUT_TOPIC,
+        WindowedSerdes.timeWindowedSerdeFrom(String.class).deserializer(),
+        stringSerde.deserializer());
+  }
 
+  private Properties config() {
     Properties config = new Properties();
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, APPLICATION_ID);
     config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
     config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-    config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, "0");
     config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE);
     config.put(ProducerConfig.ACKS_CONFIG, "all");
     config.put(ProducerConfig.RETRIES_CONFIG, 3);
     config.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-    config.put(StreamsConfig.POLL_MS_CONFIG, 1000);
-    config.put(StreamsConfig.RETRY_BACKOFF_MS_CONFIG, 2000);
-
-
-    this.testDriver = new TopologyTestDriver(topology, config);
-    this.inputTopic = this.testDriver
-        .createInputTopic(INPUT_TOPIC, stringSerde.serializer(), stringSerde.serializer());
-    this.outputTopic = this.testDriver
-        .createOutputTopic(OUTPUT_TOPIC, stringSerde.deserializer(), stringSerde.deserializer());
+    return config;
   }
 
   @AfterEach
@@ -74,17 +68,25 @@ class Covid19AppTest {
   }
 
   @Test
+  /*  https://www.confluent.io/blog/kafka-streams-take-on-watermarks-and-triggers/
+      https://stackoverflow.com/questions/54890239/kafka-streams-suppress-closing-a-timewindow-by-timeout
+      https://stackoverflow.com/questions/61066969/unable-to-force-window-suppression-when-using-topologytestdriver
+      punctuator: https://docs.confluent.io/current/streams/developer-guide/processor-api.html
+  */
   void shouldGenerateDataTable() {
     List<String> data = dataFromToday();
     data.addAll(dataFromYesterday());
-    this.inputTopic.pipeValueList(data);
 
-    assertThat(outputTopic.isEmpty(), is(false));
+    for (String datum : data) {
+      this.inputTopic.pipeInput(datum, Instant.now());
+    }
+    this.inputTopic.pipeInput(dummyRecord(), Instant.now().plusSeconds(30));
 
     BrazilRankingSummary expectedRanking = BrazilRankingSummary.builder().newConfirmed(1)
         .totalConfirmed(2).newDeaths(1).totalDeaths(3).newRecovered(2).totalRecovered(3).build();
-    assertThat(outputTopic.readKeyValue().value, is(equalTo(expectedRanking)));
 
+    assertThat(outputTopic.isEmpty(), is(false));
+    assertThat(outputTopic.readValue(), is(equalTo(expectedRanking.toString())));
     assertThat(outputTopic.isEmpty(), is(true));
   }
 
@@ -138,6 +140,21 @@ class Covid19AppTest {
     countriesJson.add(bosniaJson);
     countriesJson.add(argentinaJson);
     return countriesJson;
+  }
+
+  private String dummyRecord() {
+    return "{\n"
+        + "      \"Country\": \"\",\n"
+        + "      \"CountryCode\": \"\",\n"
+        + "      \"Slug\": \"\",\n"
+        + "      \"NewConfirmed\": 0,\n"
+        + "      \"TotalConfirmed\": 0,\n"
+        + "      \"NewDeaths\": 0,\n"
+        + "      \"TotalDeaths\": 0,\n"
+        + "      \"NewRecovered\": 0,\n"
+        + "      \"TotalRecovered\": 0,\n"
+        + "      \"Date\": \"" + Covid19AppTest.today + "\"\n"
+        + "    }";
   }
 
 }
