@@ -67,20 +67,17 @@ class Covid19AppTest {
     this.testDriver.close();
   }
 
-  @Test
   /*  https://www.confluent.io/blog/kafka-streams-take-on-watermarks-and-triggers/
-      https://stackoverflow.com/questions/54890239/kafka-streams-suppress-closing-a-timewindow-by-timeout
-      https://stackoverflow.com/questions/61066969/unable-to-force-window-suppression-when-using-topologytestdriver
-      punctuator: https://docs.confluent.io/current/streams/developer-guide/processor-api.html
+    https://stackoverflow.com/questions/54890239/kafka-streams-suppress-closing-a-timewindow-by-timeout
+    https://stackoverflow.com/questions/61066969/unable-to-force-window-suppression-when-using-topologytestdriver
+    punctuator: https://docs.confluent.io/current/streams/developer-guide/processor-api.html
   */
+  @Test
   void shouldGenerateDataTable() {
-    List<String> data = dataFromToday();
-    data.addAll(dataFromYesterday());
-
-    for (String datum : data) {
-      this.inputTopic.pipeInput(datum, Instant.now());
+    for (String datum :  data()) {
+      this.inputTopic.pipeInput(today.toString(), datum, Instant.now());
     }
-    this.inputTopic.pipeInput(dummyRecord(), Instant.now().plusSeconds(30));
+    this.inputTopic.pipeInput(today.toString(), dummyRecord(), Instant.now().plusSeconds(30));
 
     BrazilRankingSummary expectedRanking = BrazilRankingSummary.builder().newConfirmed(1)
         .totalConfirmed(2).newDeaths(1).totalDeaths(3).newRecovered(2).totalRecovered(3).build();
@@ -88,6 +85,13 @@ class Covid19AppTest {
     assertThat(outputTopic.isEmpty(), is(false));
     assertThat(outputTopic.readValue(), is(equalTo(expectedRanking.toString())));
     assertThat(outputTopic.isEmpty(), is(true));
+  }
+
+  private List<String> data() {
+    List<String> data = new ArrayList<>();
+    data.addAll(dataFromToday());
+    data.addAll(dataFromYesterday());
+    return data;
   }
 
   private List<String> dataFromToday() {

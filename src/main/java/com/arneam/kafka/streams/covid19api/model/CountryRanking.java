@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.ToIntFunction;
-import sun.java2d.SurfaceDataProxy.CountdownTracker;
 
 public class CountryRanking implements Serializable {
 
@@ -15,16 +14,21 @@ public class CountryRanking implements Serializable {
 
   private List<Country> countries = new ArrayList<>();
 
-  public void addCountry(Country country) {
+  public CountryRanking() {
+  }
+
+  public CountryRanking(CountryRanking cr1, CountryRanking cr2) {
+    countries.addAll(cr1.countries);
+    countries.addAll(cr2.countries);
+  }
+
+  public CountryRanking addCountry(Country country) {
     this.countries.add(country);
+    return this;
   }
 
   public List<Country> getCountries() {
     return Collections.unmodifiableList(countries);
-  }
-
-  public void clearCountries() {
-    countries.clear();
   }
 
   public BrazilRankingSummary createSummary() {
@@ -38,11 +42,11 @@ public class CountryRanking implements Serializable {
         .build();
   }
 
-  int brazilRanking(ToIntFunction<Country> function) {
+  private int brazilRanking(ToIntFunction<Country> function) {
     countries.sort(Collections.reverseOrder(Comparator.comparingInt(function)));
     Optional<Country> brazil = countries.stream()
         .filter(country -> country.country().equals(BRAZIL_COUNTRY_NAME)).findFirst();
-    return countries.indexOf(brazil.get()) + 1;
+    return brazil.map(country -> countries.indexOf(country) + 1).orElse(0);
   }
 
   @Override
@@ -54,4 +58,5 @@ public class CountryRanking implements Serializable {
     allValues.append("}");
     return allValues.toString();
   }
+
 }
