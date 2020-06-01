@@ -31,21 +31,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/*
- * Covid19App
- *
-$ kafka-topics.sh --zookeeper localhost:2181 --delete --topic covid-input
-$ kafka-topics.sh --zookeeper localhost:2181 --delete --topic covid-output
-
-$ kafka-topics.sh --zookeeper localhost:2181 --create --topic covid-input --partitions 1 \
---replication-factor 1
-$ kafka-topics.sh --zookeeper localhost:2181 --create --topic covid-output --partitions 1 \
---replication-factor 1 --config cleanup.policy=compact --config segment.ms=5000 \
---config min.cleanable.dirty.ratio=0.001
-
-$ kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic covid-output \
---from-beginning
-*/
 public class Covid19App {
 
   public static final String INPUT_TOPIC = "covid-input";
