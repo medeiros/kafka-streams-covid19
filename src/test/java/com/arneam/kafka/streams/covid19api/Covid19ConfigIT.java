@@ -8,25 +8,36 @@ import static org.hamcrest.Matchers.notNullValue;
 import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.streams.StreamsConfig;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class Covid19ConfigIT {
 
-  @Test
-  void shouldLoadPropertiesFile() {
-    Properties config = Covid19Config.config();
+  static Properties config;
+  static Properties configTest;
 
-    assertThat(config, is(notNullValue()));
-    assertThat(config.getProperty(StreamsConfig.APPLICATION_ID_CONFIG),
-        is(equalTo("covid19api-application")));
-    assertThat(config.getProperty(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG),
-        is(equalTo("localhost:9092")));
-    assertThat(config.getProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG),
-        is(equalTo("earliest")));
-    assertThat(config.getProperty(StreamsConfig.PROCESSING_GUARANTEE_CONFIG),
-        is(equalTo("exactly_once")));
-    assertThat(config.getProperty("input.topic"), is(equalTo("covid-input")));
-    assertThat(config.getProperty("output.topic"), is(equalTo("covid-output")));
+  @BeforeAll
+  static void init() {
+    config = Covid19Config.config();
+    configTest = Covid19Config.configTest();
+  }
+
+  @ParameterizedTest
+  @CsvSource(delimiter = '=', value = {"application.id=covid19api-application",
+    "bootstrap.servers=localhost:9092", "auto.offset.reset=earliest",
+    "processing.guarantee=exactly_once", "input.topic=covid-input", "output.topic=covid-output"})
+  void shouldLoadPropertiesFile(String key, String value) {
+    assertThat(config.getProperty(key), is(equalTo(value)));
+  }
+
+  @ParameterizedTest
+  @CsvSource(delimiter = '=', value = {"bootstrap.servers=localhost:9092",
+      "key.serializer=org.apache.kafka.common.serialization.StringSerializer",
+      "value.serializer=org.apache.kafka.common.serialization.StringSerializer",
+      "acks=all", "retries=3", "linger.ms=1", "enable.idempotence=true", "input.topic=covid-input"})
+  void shouldLoadTestPropertiesFile(String key, String value) {
+    assertThat(configTest.getProperty(key), is(equalTo(value)));
   }
 
 }
