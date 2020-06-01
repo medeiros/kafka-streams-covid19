@@ -5,8 +5,8 @@ numbers across countries, ranking Brazil in that context. The metrics are: new c
 new deaths, total deaths, new recovered and total recovered.
 
 This is a Kafka Streams application. It gets its input JSON data from a topic that was 
-previously loaded by "[kafka-connect-covid19api](https://github.com/medeiros/kafka-connect-covid19api)"  
-Kafka connector, and delivers output JSON data to a topic that will be later sink to Twitter.
+previously loaded by "[kafka-connect-covid19api](https://github.com/medeiros/kafka-connect-covid19api)" Kafka connector, 
+and delivers output JSON data to a topic that will be later sink to Twitter.
 
 # Topology
 
