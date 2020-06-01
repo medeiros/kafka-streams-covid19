@@ -1,6 +1,6 @@
 package com.arneam.kafka.streams.covid19api.model;
 
-public class CountrySchema {
+class CountrySchema {
 
   public static final String COUNTRY_FIELD = "Country";
   public static final String COUNTRY_CODE_FIELD = "CountryCode";
