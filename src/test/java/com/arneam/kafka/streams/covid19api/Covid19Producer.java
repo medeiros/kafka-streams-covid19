@@ -6,9 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,9 +14,10 @@ class Covid19Producer {
 
   private static Logger log = LoggerFactory.getLogger(Covid19Producer.class);
   private static String today = Instant.now().toString();
+  private static Properties config = Covid19Config.config();
 
   public static void main(String[] args) throws InterruptedException {
-    new Covid19Producer().produce("covid-input", config());
+    new Covid19Producer().produce(config.getProperty("input.topic"), config);
   }
 
   private void produce(String topic, Properties config) throws InterruptedException {
@@ -41,20 +40,6 @@ class Covid19Producer {
     Thread.sleep(15000);
     ProducerRecord<String, String> dummy = new ProducerRecord<>(topic, dummyRecord());
     producer.send(dummy, (r, e) -> log.info("Sending dummy record: {}", dummy.toString()));
-  }
-
-  private static Properties config() {
-    Properties config = new Properties();
-    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-    config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-
-    config.put(ProducerConfig.ACKS_CONFIG, "all");
-    config.put(ProducerConfig.RETRIES_CONFIG, 3);
-    config.put(ProducerConfig.LINGER_MS_CONFIG, 1);
-
-    config.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-    return config;
   }
 
   private List<String> data() {
