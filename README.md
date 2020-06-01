@@ -1,22 +1,23 @@
 # Kafka Streams for Covid19API
 
-This application get raw data from Covid19API (https://covid19api.com/summary) and 
-summarize daily data in terms of Brazil ranking in the world (number of: new cases, total cases,
-new deaths, total death, new recovered and total recovered).
+The purpose of this application is to summarize a daily list of information regarding Covid-19
+numbers across countries, ranking Brazil in that context. The metrics are: new cases, total cases, 
+new deaths, total deaths, new recovered and total recovered.
 
-It is intended to work with kafka-connect-covid19api Connector Source (https://github.com/medeiros/kafka-connect-covid19api) 
-and Twitter Connector Sink (https://github.com/Eneco/kafka-connect-twitter).  
+This is a Kafka Streams application. It gets its input JSON data from a topic that was 
+previously loaded by "[kafka-connect-covid19api](https://github.com/medeiros/kafka-connect-covid19api)"  
+Kafka connector, and delivers output JSON data to a topic that will be later sink to Twitter.
 
 # Topology
 
 ```
 1. STREAM -> <null, countriesJSONArray>
 2. MAPVALUES -> <null, List<Country>>
-3. MAPVALUES NewConfirmed -> <null, BrazilRankingSummary>
-4. MAPVALUES TotalConfirmed -> <null, BrazilRankingSummary>
-5. MAPVALUES NewDeaths -> <null, BrazilRankingSummary>
-6. MAPVALUES TotalDeaths -> <null, BrazilRankingSummary>
-7. MAPVALUES NewRecovered -> <null, BrazilRankingSummary>
-8. MAPVALUES TotalRecovered -> <null, BrazilRankingSummary>
-9. TO Kafka -> <null, BrazilRankingSummary>
+3. FILTER Today -> <null, List<Country>>
+4. SELECTKEY date -> <date, List<Country>>
+5. GROUPBYKEY date -> <date, List<Country>>
+6. WINDOW Session -> <date, SessionWindowedKStream<String, List<Country>>>
+7. AGGREGATE -> <date, KTable<Windowed<String>, CountryRanking>>
+8. BRANCH -> <date, KStream<Windowed<String>, String>>
+9. TO destination -> <date, JSONBrazilRankingString>
 ```
