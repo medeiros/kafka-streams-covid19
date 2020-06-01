@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.notNullValue;
 
 import java.util.Properties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.StreamsConfig;
 import org.junit.jupiter.api.Test;
 
@@ -24,10 +23,10 @@ class Covid19ConfigIT {
         is(equalTo("localhost:9092")));
     assertThat(config.getProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG),
         is(equalTo("earliest")));
-    assertThat(config.getProperty(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG),
-        is(equalTo(Serdes.StringSerde.class.getCanonicalName())));
-    assertThat(config.getProperty(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG),
-        is(equalTo(Serdes.StringSerde.class.getCanonicalName())));
+    assertThat(config.getProperty(StreamsConfig.PROCESSING_GUARANTEE_CONFIG),
+        is(equalTo("exactly_once")));
+    assertThat(config.getProperty("input.topic"), is(equalTo("covid-input")));
+    assertThat(config.getProperty("output.topic"), is(equalTo("covid-output")));
   }
 
 }

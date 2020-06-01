@@ -6,12 +6,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Properties;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
-import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.Topology;
 import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.Grouped;
@@ -33,32 +31,18 @@ import org.slf4j.LoggerFactory;
 
 public class Covid19App {
 
-  public static final String INPUT_TOPIC = "covid-input";
-  public static final String OUTPUT_TOPIC = "covid-output";
-  public static final String APPLICATION_ID = "covid19-application-411";
-  public static final String BOOTSTRAP_SERVERS = "localhost:9092";
-
   public Logger log = LoggerFactory.getLogger(Covid19App.class);
 
   public static void main(String[] args) {
-    final Topology topology = new Covid19App().topology(Instant.now(), INPUT_TOPIC, OUTPUT_TOPIC);
-    final KafkaStreams streams = new KafkaStreams(topology, config());
+    Properties config = Covid19Config.config();
+
+    final Topology topology = new Covid19App().topology(Instant.now(),
+        config.getProperty("input.topic"), config.getProperty("output.topic"));
+
+    final KafkaStreams streams = new KafkaStreams(topology, config);
     streams.cleanUp();
     streams.start();
     Runtime.getRuntime().addShutdownHook(new Thread(streams::close));
-  }
-
-  private static Properties config() {
-    final Properties config = new Properties();
-    config.put(StreamsConfig.APPLICATION_ID_CONFIG, APPLICATION_ID);
-    config.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, BOOTSTRAP_SERVERS);
-    config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-    config.put(StreamsConfig.PROCESSING_GUARANTEE_CONFIG, StreamsConfig.EXACTLY_ONCE);
-    // to make sure that only one agregate message will come out - using Window instead
-    // https://docs.confluent.io/current/streams/developer-guide/memory-mgmt.html
-    //config.put(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 5 * 1024 * 1024);
-    //config.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 30000);
-    return config;
   }
 
   public Topology topology(Instant instant, String inputTopic, String outputTopic) {
