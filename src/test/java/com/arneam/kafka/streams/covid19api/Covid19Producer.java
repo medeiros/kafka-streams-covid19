@@ -14,7 +14,7 @@ class Covid19Producer {
 
   private static Logger log = LoggerFactory.getLogger(Covid19Producer.class);
   private static String today = Instant.now().toString();
-  private static Properties config = Covid19Config.config();
+  private static Properties config = Covid19Config.configTest();
 
   public static void main(String[] args) throws InterruptedException {
     new Covid19Producer().produce(config.getProperty("input.topic"), config);
