@@ -36,18 +36,20 @@ class CountryTest {
 
   @Test
   void shouldCreateCountryFromJSON() {
-    JSONObject jsonObject = new JSONObject("{\n"
-        + "      \"Country\": \"Bosnia and Herzegovina\",\n"
-        + "      \"CountryCode\": \"BA\",\n"
-        + "      \"Slug\": \"bosnia-and-herzegovina\",\n"
-        + "      \"NewConfirmed\": 23,\n"
-        + "      \"TotalConfirmed\": 2181,\n"
-        + "      \"NewDeaths\": 3,\n"
-        + "      \"TotalDeaths\": 120,\n"
-        + "      \"NewRecovered\": 60,\n"
-        + "      \"TotalRecovered\": 1228,\n"
-        + "      \"Date\": \"2020-05-14T08:13:33Z\"\n"
-        + "    }");
+    JSONObject jsonObject = new JSONObject(
+        "{\"schema\":{\"name\":\"com.arneam.covid19.CountryValue\",\"optional\":false,\"type\":\"struct\",\"fields\":[{\"field\":\"Country\",\"optional\":false,\"type\":\"string\"},{\"field\":\"Slug\",\"optional\":false,\"type\":\"string\"},{\"field\":\"NewConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"Date\",\"name\":\"org.apache.kafka.connect.data.Timestamp\",\"optional\":false,\"type\":\"int64\",\"version\":1}],\"version\":2}"
+            + ",\"payload\": {"
+            + "      \"Country\": \"Bosnia and Herzegovina\",\n"
+            + "      \"CountryCode\": \"BA\",\n"
+            + "      \"Slug\": \"bosnia-and-herzegovina\",\n"
+            + "      \"NewConfirmed\": 23,\n"
+            + "      \"TotalConfirmed\": 2181,\n"
+            + "      \"NewDeaths\": 3,\n"
+            + "      \"TotalDeaths\": 120,\n"
+            + "      \"NewRecovered\": 60,\n"
+            + "      \"TotalRecovered\": 1228,\n"
+            + "      \"Date\": \"2020-05-14T08:13:33Z\"\n"
+            + "    }}");
     Country country = Country.fromJSON(jsonObject);
     assertThat(country, is(notNullValue()));
     assertThat(country.country(), is(equalTo("Bosnia and Herzegovina")));

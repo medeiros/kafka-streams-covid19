@@ -74,7 +74,7 @@ class Covid19AppTest {
   */
   @Test
   void shouldGenerateDataTable() {
-    for (String datum :  data()) {
+    for (String datum : data()) {
       this.inputTopic.pipeInput(today.toString(), datum, Instant.now());
     }
     this.inputTopic.pipeInput(today.toString(), dummyRecord(), Instant.now().plusSeconds(30));
@@ -103,42 +103,48 @@ class Covid19AppTest {
   }
 
   private List<String> dataFrom(Instant date, int totalRecoveredValueToChangeOrder) {
-    String bosniaJson = "{\n"
-        + "      \"Country\": \"Bosnia and Herzegovina\",\n"
-        + "      \"CountryCode\": \"BA\",\n"
-        + "      \"Slug\": \"bosnia-and-herzegovina\",\n"
-        + "      \"NewConfirmed\": 23,\n"
-        + "      \"TotalConfirmed\": 2181,\n"
-        + "      \"NewDeaths\": 3,\n"
-        + "      \"TotalDeaths\": 120,\n"
-        + "      \"NewRecovered\": 60,\n"
-        + "      \"TotalRecovered\": 1228,\n"
-        + "      \"Date\": \"" + date + "\"\n"
-        + "    }";
-    String brazilJson = "{\n"
-        + "      \"Country\": \"Brazil\",\n"
-        + "      \"CountryCode\": \"BR\",\n"
-        + "      \"Slug\": \"brazil\",\n"
-        + "      \"NewConfirmed\": 12000,\n"
-        + "      \"TotalConfirmed\": 13,\n"
-        + "      \"NewDeaths\": 14,\n"
-        + "      \"TotalDeaths\": 15,\n"
-        + "      \"NewRecovered\": 16,\n"
-        + "      \"TotalRecovered\": " + totalRecoveredValueToChangeOrder + ",\n"
-        + "      \"Date\": \"" + date + "\"\n"
-        + "    }";
-    String argentinaJson = "{\n"
-        + "      \"Country\": \"Argentina\",\n"
-        + "      \"CountryCode\": \"AR\",\n"
-        + "      \"Slug\": \"argentina\",\n"
-        + "      \"NewConfirmed\": 1,\n"
-        + "      \"TotalConfirmed\": 2,\n"
-        + "      \"NewDeaths\": 4,\n"
-        + "      \"TotalDeaths\": 20,\n"
-        + "      \"NewRecovered\": 5,\n"
-        + "      \"TotalRecovered\": 27,\n"
-        + "      \"Date\": \"" + date + "\"\n"
-        + "    }";
+    String bosniaJson =
+        "{\"schema\":{\"name\":\"com.arneam.covid19.CountryValue\",\"optional\":false,\"type\":\"struct\",\"fields\":[{\"field\":\"Country\",\"optional\":false,\"type\":\"string\"},{\"field\":\"Slug\",\"optional\":false,\"type\":\"string\"},{\"field\":\"NewConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"Date\",\"name\":\"org.apache.kafka.connect.data.Timestamp\",\"optional\":false,\"type\":\"int64\",\"version\":1}],\"version\":2}"
+            + ",\"payload\": {\n"
+            + "      \"Country\": \"Bosnia and Herzegovina\",\n"
+            + "      \"CountryCode\": \"BA\",\n"
+            + "      \"Slug\": \"bosnia-and-herzegovina\",\n"
+            + "      \"NewConfirmed\": 23,\n"
+            + "      \"TotalConfirmed\": 2181,\n"
+            + "      \"NewDeaths\": 3,\n"
+            + "      \"TotalDeaths\": 120,\n"
+            + "      \"NewRecovered\": 60,\n"
+            + "      \"TotalRecovered\": 1228,\n"
+            + "      \"Date\": \"" + date + "\"\n"
+            + "    }}";
+    String brazilJson =
+        "{\"schema\":{\"name\":\"com.arneam.covid19.CountryValue\",\"optional\":false,\"type\":\"struct\",\"fields\":[{\"field\":\"Country\",\"optional\":false,\"type\":\"string\"},{\"field\":\"Slug\",\"optional\":false,\"type\":\"string\"},{\"field\":\"NewConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"Date\",\"name\":\"org.apache.kafka.connect.data.Timestamp\",\"optional\":false,\"type\":\"int64\",\"version\":1}],\"version\":2}"
+            + ",\"payload\": {\n"
+            + "      \"Country\": \"Brazil\",\n"
+            + "      \"CountryCode\": \"BR\",\n"
+            + "      \"Slug\": \"brazil\",\n"
+            + "      \"NewConfirmed\": 12000,\n"
+            + "      \"TotalConfirmed\": 13,\n"
+            + "      \"NewDeaths\": 14,\n"
+            + "      \"TotalDeaths\": 15,\n"
+            + "      \"NewRecovered\": 16,\n"
+            + "      \"TotalRecovered\": " + totalRecoveredValueToChangeOrder + ",\n"
+            + "      \"Date\": \"" + date + "\"\n"
+            + "    }}";
+    String argentinaJson =
+        "{\"schema\":{\"name\":\"com.arneam.covid19.CountryValue\",\"optional\":false,\"type\":\"struct\",\"fields\":[{\"field\":\"Country\",\"optional\":false,\"type\":\"string\"},{\"field\":\"Slug\",\"optional\":false,\"type\":\"string\"},{\"field\":\"NewConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"Date\",\"name\":\"org.apache.kafka.connect.data.Timestamp\",\"optional\":false,\"type\":\"int64\",\"version\":1}],\"version\":2}"
+            + ",\"payload\": {\n"
+            + "      \"Country\": \"Argentina\",\n"
+            + "      \"CountryCode\": \"AR\",\n"
+            + "      \"Slug\": \"argentina\",\n"
+            + "      \"NewConfirmed\": 1,\n"
+            + "      \"TotalConfirmed\": 2,\n"
+            + "      \"NewDeaths\": 4,\n"
+            + "      \"TotalDeaths\": 20,\n"
+            + "      \"NewRecovered\": 5,\n"
+            + "      \"TotalRecovered\": 27,\n"
+            + "      \"Date\": \"" + date + "\"\n"
+            + "    }}";
     List<String> countriesJson = new ArrayList<>();
     countriesJson.add(brazilJson);
     countriesJson.add(bosniaJson);
@@ -147,18 +153,20 @@ class Covid19AppTest {
   }
 
   private String dummyRecord() {
-    return "{\n"
-        + "      \"Country\": \"\",\n"
-        + "      \"CountryCode\": \"\",\n"
-        + "      \"Slug\": \"\",\n"
-        + "      \"NewConfirmed\": 0,\n"
-        + "      \"TotalConfirmed\": 0,\n"
-        + "      \"NewDeaths\": 0,\n"
-        + "      \"TotalDeaths\": 0,\n"
-        + "      \"NewRecovered\": 0,\n"
-        + "      \"TotalRecovered\": 0,\n"
-        + "      \"Date\": \"" + Covid19AppTest.today + "\"\n"
-        + "    }";
+    return
+        "{\"schema\":{\"name\":\"com.arneam.covid19.CountryValue\",\"optional\":false,\"type\":\"struct\",\"fields\":[{\"field\":\"Country\",\"optional\":false,\"type\":\"string\"},{\"field\":\"Slug\",\"optional\":false,\"type\":\"string\"},{\"field\":\"NewConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalConfirmed\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalDeaths\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"NewRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"TotalRecovered\",\"optional\":false,\"type\":\"int32\"},{\"field\":\"Date\",\"name\":\"org.apache.kafka.connect.data.Timestamp\",\"optional\":false,\"type\":\"int64\",\"version\":1}],\"version\":2}"
+            + ",\"payload\": {\n"
+            + "      \"Country\": \"\",\n"
+            + "      \"CountryCode\": \"\",\n"
+            + "      \"Slug\": \"\",\n"
+            + "      \"NewConfirmed\": 0,\n"
+            + "      \"TotalConfirmed\": 0,\n"
+            + "      \"NewDeaths\": 0,\n"
+            + "      \"TotalDeaths\": 0,\n"
+            + "      \"NewRecovered\": 0,\n"
+            + "      \"TotalRecovered\": 0,\n"
+            + "      \"Date\": \"" + Covid19AppTest.today + "\"\n"
+            + "    }}";
   }
 
 }

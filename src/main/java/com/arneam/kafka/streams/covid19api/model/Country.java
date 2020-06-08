@@ -27,15 +27,20 @@ public class Country implements Serializable {
 
   public static Country fromJSON(JSONObject jsonObject) {
     return Country.builder()
-        .country(jsonObject.getString(CountrySchema.COUNTRY_FIELD))
-        .countryCode(jsonObject.getString(CountrySchema.COUNTRY_CODE_FIELD))
-        .slug(jsonObject.getString(CountrySchema.SLUG_FIELD))
-        .newConfirmed(jsonObject.getInt(CountrySchema.NEW_CONFIRMED_FIELD))
-        .totalConfirmed(jsonObject.getInt(CountrySchema.TOTAL_CONFIRMED_FIELD))
-        .newDeaths(jsonObject.getInt(CountrySchema.NEW_DEATHS_FIELD))
-        .totalDeaths(jsonObject.getInt(CountrySchema.TOTAL_DEATHS_FIELD))
-        .newRecovered(jsonObject.getInt(CountrySchema.NEW_RECOVERED_FIELD))
-        .totalRecovered(jsonObject.getInt(CountrySchema.TOTAL_RECOVERED_FIELD))
-        .date(Instant.parse(jsonObject.getString(CountrySchema.DATE_FIELD))).build();
+        .country(payloadOf(jsonObject).getString(CountrySchema.COUNTRY_FIELD))
+        .countryCode(payloadOf(jsonObject).getString(CountrySchema.COUNTRY_CODE_FIELD))
+        .slug(payloadOf(jsonObject).getString(CountrySchema.SLUG_FIELD))
+        .newConfirmed(payloadOf(jsonObject).getInt(CountrySchema.NEW_CONFIRMED_FIELD))
+        .totalConfirmed(payloadOf(jsonObject).getInt(CountrySchema.TOTAL_CONFIRMED_FIELD))
+        .newDeaths(payloadOf(jsonObject).getInt(CountrySchema.NEW_DEATHS_FIELD))
+        .totalDeaths(payloadOf(jsonObject).getInt(CountrySchema.TOTAL_DEATHS_FIELD))
+        .newRecovered(payloadOf(jsonObject).getInt(CountrySchema.NEW_RECOVERED_FIELD))
+        .totalRecovered(payloadOf(jsonObject).getInt(CountrySchema.TOTAL_RECOVERED_FIELD))
+        .date(Instant.parse(payloadOf(jsonObject).getString(CountrySchema.DATE_FIELD))).build();
   }
+
+  private static JSONObject payloadOf(JSONObject jsonObject) {
+    return jsonObject.getJSONObject("payload");
+  }
+
 }
