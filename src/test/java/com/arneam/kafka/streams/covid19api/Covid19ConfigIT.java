@@ -24,7 +24,7 @@ class Covid19ConfigIT {
   }
 
   @ParameterizedTest
-  @CsvSource(delimiter = '=', value = {"application.id=covid19api-application",
+  @CsvSource(delimiter = '=', value = {"application.id=covid19api-application-04",
     "bootstrap.servers=localhost:9092", "auto.offset.reset=earliest",
     "processing.guarantee=exactly_once", "input.topic=covid-input", "output.topic=covid-output"})
   void shouldLoadPropertiesFile(String key, String value) {
