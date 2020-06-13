@@ -29,8 +29,7 @@ and delivers output JSON data to a topic that will be later sink to Twitter.
 kafka-topics.sh --zookeeper localhost:2181 --delete --topic covid-input
 kafka-topics.sh --zookeeper localhost:2181 --delete --topic covid-output
 kafka-topics.sh --zookeeper localhost:2181 --create --topic covid-input --partitions 3 \
---replication-factor 1 --config cleanup.policy=compact --config segment.ms=5000 \
---config min.cleanable.dirty.ratio=0.001
+--replication-factor 1 
 kafka-topics.sh --zookeeper localhost:2181 --create --topic covid-output --partitions 3 \
 --replication-factor 1
 
