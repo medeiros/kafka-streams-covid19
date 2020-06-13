@@ -1,4 +1,4 @@
-package com.arneam.kafka.streams.covid19api;
+package com.arneam.kafka.streams.covid19api.serde;
 
 import com.arneam.kafka.streams.covid19api.model.CountryRanking;
 import java.io.ByteArrayInputStream;

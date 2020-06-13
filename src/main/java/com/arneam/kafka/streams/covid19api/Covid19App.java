@@ -2,6 +2,8 @@ package com.arneam.kafka.streams.covid19api;
 
 import com.arneam.kafka.streams.covid19api.model.Country;
 import com.arneam.kafka.streams.covid19api.model.CountryRanking;
+import com.arneam.kafka.streams.covid19api.serde.CountryRankingSerde;
+import com.arneam.kafka.streams.covid19api.serde.CountrySerde;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
