@@ -1,7 +1,6 @@
 package com.arneam.kafka.streams.covid19api.model;
 
 import java.io.Serializable;
-import java.time.Instant;
 import lombok.Builder;
 import lombok.ToString;
 import lombok.Value;
@@ -23,7 +22,7 @@ public class Country implements Serializable {
   int totalDeaths;
   int newRecovered;
   int totalRecovered;
-  Instant date;
+  String date;
 
   public static Country fromJSON(JSONObject jsonObject) {
     return Country.builder()
@@ -36,7 +35,7 @@ public class Country implements Serializable {
         .totalDeaths(payloadOf(jsonObject).getInt(CountrySchema.TOTAL_DEATHS_FIELD))
         .newRecovered(payloadOf(jsonObject).getInt(CountrySchema.NEW_RECOVERED_FIELD))
         .totalRecovered(payloadOf(jsonObject).getInt(CountrySchema.TOTAL_RECOVERED_FIELD))
-        .date(Instant.parse(payloadOf(jsonObject).getString(CountrySchema.DATE_FIELD))).build();
+        .date(payloadOf(jsonObject).getString(CountrySchema.DATE_FIELD)).build();
   }
 
   private static JSONObject payloadOf(JSONObject jsonObject) {

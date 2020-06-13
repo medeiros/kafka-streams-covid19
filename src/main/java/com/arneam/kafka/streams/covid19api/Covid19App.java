@@ -25,7 +25,6 @@ import org.apache.kafka.streams.kstream.SessionWindows;
 import org.apache.kafka.streams.kstream.Suppressed;
 import org.apache.kafka.streams.kstream.Suppressed.BufferConfig;
 import org.apache.kafka.streams.kstream.Windowed;
-import org.apache.kafka.streams.kstream.WindowedSerdes;
 import org.apache.kafka.streams.state.SessionStore;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -54,7 +53,7 @@ public class Covid19App {
     KStream<String, Country> filterTodayData = filterSameDay(instant, mapJSONToCountry);
     SessionWindowedKStream<String, Country> window = createWindow(filterTodayData);
     KTable<Windowed<String>, CountryRanking> aggregate = aggregateWindow(window);
-    KStream<Windowed<String>, String> finalStream = summarizeData(aggregate);
+    KStream<String, String> finalStream = summarizeData(aggregate);
     toDestination(outputTopic, finalStream);
     return builder.build();
   }
@@ -75,7 +74,7 @@ public class Covid19App {
 
   private KStream<String, Country> filterSameDay(Instant instant, KStream<String, Country> stream) {
     KStream<String, Country> filterTodayData = stream
-        .filter((s, country) -> country.date().truncatedTo(ChronoUnit.DAYS)
+        .filter((s, country) -> Instant.parse(country.date()).truncatedTo(ChronoUnit.DAYS)
             .equals(instant.truncatedTo(ChronoUnit.DAYS)));
     filterTodayData.print(Printed.toSysOut());
     return filterTodayData;
@@ -84,8 +83,8 @@ public class Covid19App {
   private SessionWindowedKStream<String, Country> createWindow(KStream<String, Country> stream) {
     return stream
         .selectKey((s, country) -> {
-          log.info("-----> Select Key: {}", country.date().toString());
-          return country.date().toString();
+          log.info("-----> Select Key: {}", country.date());
+          return country.date();
         })
         .groupByKey(Grouped.with(Serdes.String(), new CountrySerde()))
         .windowedBy(SessionWindows.with(Duration.ofSeconds(5)).grace(Duration.ofSeconds(5)));
@@ -114,7 +113,7 @@ public class Covid19App {
     return aggregate;
   }
 
-  private KStream<Windowed<String>, String> summarizeData(
+  private KStream<String, String> summarizeData(
       KTable<Windowed<String>, CountryRanking> aggregate) {
 
     // the dummy record (used to flush window data from previous execution) still exist and
@@ -125,8 +124,9 @@ public class Covid19App {
         .toStream()
         .branch((stringWindowed, countryRanking) -> ignoreDummy(countryRanking));
 
-    KStream<Windowed<String>, String> branchStream = branches[0]
-        .mapValues((s, countryRanking) -> countryRanking.createSummary().toString());
+    KStream<String, String> branchStream = branches[0]
+        .mapValues((s, countryRanking) -> countryRanking.createSummary().toString())
+        .selectKey((stringWindowed, s) -> stringWindowed.key());
     branchStream.print(Printed.toSysOut());
     return branchStream;
   }
@@ -137,9 +137,8 @@ public class Covid19App {
         && !countryRanking.getCountries().get(0).countryCode().equals("XX");
   }
 
-  private void toDestination(String outputTopic, KStream<Windowed<String>, String> stream) {
-    stream.to(outputTopic,
-        Produced.with(WindowedSerdes.timeWindowedSerdeFrom(String.class), Serdes.String()));
+  private void toDestination(String outputTopic, KStream<String, String> stream) {
+    stream.to(outputTopic, Produced.with(Serdes.String(), Serdes.String()));
   }
 
 }
