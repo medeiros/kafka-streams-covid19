@@ -81,7 +81,10 @@ public class Covid19App {
 
   private SessionWindowedKStream<String, Country> createWindow(KStream<String, Country> stream) {
     return stream
-        .selectKey((s, country) -> country.date().toString())
+        .selectKey((s, country) -> {
+          log.info("-----> Select Key: {}", country.date().toString());
+          return country.date().toString();
+        })
         .groupByKey(Grouped.with(Serdes.String(), new CountrySerde()))
         .windowedBy(SessionWindows.with(Duration.ofSeconds(5)).grace(Duration.ofSeconds(5)));
   }
@@ -116,7 +119,8 @@ public class Covid19App {
     // will be counted in the next window. In order to ignore this dummy record, I'm using
     // branch (filter could do the job, but it will generate a null record in the output, and
     // this is not a good behavior - with branch, nothing is generated - not even null)
-    KStream<Windowed<String>, CountryRanking>[] branches = aggregate.toStream()
+    @SuppressWarnings("unchecked") KStream<Windowed<String>, CountryRanking>[] branches = aggregate
+        .toStream()
         .branch((stringWindowed, countryRanking) -> ignoreDummy(countryRanking));
 
     KStream<Windowed<String>, String> branchStream = branches[0]
@@ -126,8 +130,9 @@ public class Covid19App {
   }
 
   private boolean ignoreDummy(CountryRanking countryRanking) {
+    log.info("-----> checking for dummy record: {}" + countryRanking.toString());
     return countryRanking.getCountries().size() > 0
-        && !countryRanking.getCountries().get(0).country().isEmpty();
+        && !countryRanking.getCountries().get(0).countryCode().equals("XX");
   }
 
   private void toDestination(String outputTopic, KStream<Windowed<String>, String> stream) {
