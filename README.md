@@ -41,3 +41,10 @@ kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic covid-input 
 kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic covid-output \
 --from-beginning
 ```
+
+# References
+
+- https://www.confluent.io/blog/kafka-streams-take-on-watermarks-and-triggers/
+- https://stackoverflow.com/questions/54890239/kafka-streams-suppress-closing-a-timewindow-by-timeout
+- https://stackoverflow.com/questions/61066969/unable-to-force-window-suppression-when-using-topologytestdriver
+- punctuator: https://docs.confluent.io/current/streams/developer-guide/processor-api.html
