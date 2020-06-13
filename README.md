@@ -8,7 +8,7 @@ This is a Kafka Streams application. It gets its input JSON data from a topic th
 previously loaded by "[kafka-connect-covid19api](https://github.com/medeiros/kafka-connect-covid19api)" Kafka connector, 
 and delivers output JSON data to a topic that will be later sink to Twitter.
 
-# Topology
+## Topology
 
 ```
 1. STREAM -> <null, countriesJSONArray>
@@ -22,7 +22,7 @@ and delivers output JSON data to a topic that will be later sink to Twitter.
 9. TO destination -> <date, JSONBrazilRankingString>
 ```
 
-# Useful Commands
+## Useful Commands
 
 ```bash
 # create topics from scratch
@@ -42,7 +42,7 @@ kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic covid-output
 --from-beginning
 ```
 
-# References
+## References
 
 - https://www.confluent.io/blog/kafka-streams-take-on-watermarks-and-triggers/
 - https://stackoverflow.com/questions/54890239/kafka-streams-suppress-closing-a-timewindow-by-timeout
